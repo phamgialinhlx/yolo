@@ -1,0 +1,194 @@
+_target_: src.models.yolo_module.YOLOLitModule
+
+net: 
+  _target_: src.models.components.yolov1.YOLOv1
+  net:
+    _target_: torch.nn.Sequential
+    _args_:
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 3
+        out_channels: 64
+        kernel_size: 7
+        stride: 2
+        padding: 3
+      - _target_: torch.nn.MaxPool2d
+        kernel_size: 2
+        stride: 2
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 64
+        out_channels: 192
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: torch.nn.MaxPool2d
+        kernel_size: 2
+        stride: 2
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 192
+        out_channels: 128
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 128
+        out_channels: 256
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 256
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 512
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: torch.nn.MaxPool2d
+        kernel_size: 2
+        stride: 2
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 256
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 512
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 256
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 512
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 256
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 512
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 256
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 256
+        out_channels: 512
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 512
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: torch.nn.MaxPool2d
+        kernel_size: 2
+        stride: 2    
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 512
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 512
+        kernel_size: 1
+        stride: 1
+        padding: 0
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 512
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 1024
+        kernel_size: 3
+        stride: 2
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - _target_: src.models.components.cnn_block.CNNBlock
+        in_channels: 1024
+        out_channels: 1024
+        kernel_size: 3
+        stride: 1
+        padding: 1
+
+  fcs: 
+    _target_: torch.nn.Sequential
+    _args_:
+      - _target_: torch.nn.Flatten
+      - _target_: torch.nn.Linear
+        in_features: 50176 # 7*7*1024 in paper
+        out_features: 4096
+      - _target_: torch.nn.Dropout
+        p: 0.0
+      - _target_: torch.nn.LeakyReLU
+        negative_slope: 0.1
+      - _target_: torch.nn.Linear
+        in_features: 4096
+        out_features: 1470 # 7*7*(20+2*5) ~ 7*7*30 in paper
+
+  in_channels: 3
+  split_size: 7 
+  num_boxes: 2 
+  num_classes: 20
+
+loss:
+  _target_: src.models.components.yolo_loss.YoloLoss
+  S: 7
+  B: 2
+  C: 20
+  lambda_coord: 5
+  lambda_noobj: 0.5
+
+lr: 0.00002
+weight_decay: 0
