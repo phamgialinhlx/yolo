@@ -192,3 +192,6 @@ loss:
 
 lr: 0.00002
 weight_decay: 0
+# S: 7
+# B: 2
+# C: 20

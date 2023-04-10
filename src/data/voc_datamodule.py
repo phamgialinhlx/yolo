@@ -1,3 +1,6 @@
+import pyrootutils
+pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
 from typing import Any, Dict, Optional, Tuple
 from lightning import LightningDataModule
 
@@ -5,7 +8,36 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.datasets import VOCDetection
 from torchvision.transforms import transforms
+from PIL import Image
+from models.utils.yolo_utils import yolo_box
 
+CLASSES = (
+    "aeroplane",
+    "bicycle",
+    "bird",
+    "boat",
+    "bottle",
+    "bus",
+    "car",
+    "cat",
+    "chair",
+    "cow",
+    "diningtable",
+    "dog",
+    "horse",
+    "motorbike",
+    "person",
+    "pottedplant",
+    "sheep",
+    "sofa",
+    "train",
+    "tvmonitor",
+)
+
+class VOCDataset(VOCDetection):
+    def __getitem__(self, index: int) -> Dict[str, Any]:    
+        img, target = super().__getitem__(index)
+        return img, yolo_box(target, CLASSES)
 class VOCDataModule(LightningDataModule):
     def __init__(
         self,
@@ -46,9 +78,9 @@ class VOCDataModule(LightningDataModule):
         careful not to execute things like random split twice!
         """
         if not self.data_train and not self.data_val and not self.data_test:
-            self.data_test = VOCDetection(self.hparams.data_dir, year="2007", image_set="test", transform=self.transforms)
+            self.data_test = VOCDataset(self.hparams.data_dir, year="2007", image_set="test", transform=self.transforms)
             self.data_train, self.data_val = random_split(
-                dataset=VOCDetection(self.hparams.data_dir, image_set="trainval", transform=self.transforms),
+                dataset=VOCDataset(self.hparams.data_dir, image_set="trainval", transform=self.transforms),
                 lengths=self.hparams.train_val_split,
                 generator=torch.Generator().manual_seed(42),
             )

@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from src.models.utils.iou import intersection_over_union
+from src.models.utils.yolo_utils import intersection_over_union
 
 class YoloLoss(nn.Module):
     def __init__(self, S=7, B=2, C=20, lambda_coord:int = 5, lambda_noobj:int = 0.5):
