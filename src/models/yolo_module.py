@@ -34,13 +34,13 @@ class YOLOLitModule(LightningModule):
         return self.net(x)
 
     def model_step(self, batch: Any):
-        print(len(batch))
+        # print(len(batch))
         # img = torch.stack([x[0] for x in batch])
         img = batch[0]
         label = batch[1]
         # label = torch.stack([x[1] for x in batch])
-        from IPython import embed; embed()
-        print(img.shape)
+        # from IPython import embed; embed()
+        # print(img.shape)
         out = self.forward(img)
         loss = self.loss(out, label)
         preds = torch.argmax(out, dim=1)
@@ -48,8 +48,8 @@ class YOLOLitModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int) -> torch.Tensor:
         # img, label = batch
-        print("training_step")
-        print(len(batch))
+        # print("training_step")
+        # print(len(batch))
         loss, preds, targets = self.model_step(batch)
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -57,8 +57,8 @@ class YOLOLitModule(LightningModule):
         return loss
     
     def validation_step(self, batch: Any, batch_idx: int):
-        print("validation_step")
-        print(len(batch))
+        # print("validation_step")
+        # print(len(batch))
         loss, preds, targets = self.model_step(batch)
 
         # update and log metrics
