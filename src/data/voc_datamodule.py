@@ -1,5 +1,10 @@
 import pyrootutils
-pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+root = pyrootutils.setup_root(
+    search_from=__file__,
+    indicator=[".git", "pyproject.toml"],
+    pythonpath=True,
+    dotenv=True,
+)
 
 from typing import Any, Dict, Optional, Tuple
 from lightning import LightningDataModule
@@ -9,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.datasets import VOCDetection
 from torchvision.transforms import transforms
 from PIL import Image
-from models.utils.yolo_utils import yolo_box
+from src.models.utils.yolo_utils import yolo_box
 
 CLASSES = (
     "aeroplane",
@@ -38,6 +43,8 @@ class VOCDataset(VOCDetection):
     def __getitem__(self, index: int) -> Dict[str, Any]:    
         img, target = super().__getitem__(index)
         return img, yolo_box(target, CLASSES)
+    # def foo():
+    #     print("foo")
 class VOCDataModule(LightningDataModule):
     def __init__(
         self,
@@ -82,42 +89,40 @@ class VOCDataModule(LightningDataModule):
             self.data_train, self.data_val = random_split(
                 dataset=VOCDataset(self.hparams.data_dir, image_set="trainval", transform=self.transforms),
                 lengths=self.hparams.train_val_split,
-                generator=torch.Generator().manual_seed(42),
+                generator=torch.Generator().manual_seed(56),
             )
 
     def train_dataloader(self):
         return DataLoader(
             dataset=self.data_train,
             batch_size=self.hparams.batch_size,
-            collate_fn=lambda x: x,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
-
+            drop_last=True,
         )
 
     def val_dataloader(self):
         return DataLoader(
             dataset=self.data_val,
             batch_size=self.hparams.batch_size,
-            collate_fn=lambda x: x,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
+            drop_last=True,
         )
 
     def test_dataloader(self):
         return DataLoader(
             dataset=self.data_test,
             batch_size=self.hparams.batch_size,
-            collate_fn=lambda x: x,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )
     
 if __name__ == "__main__":
-    _ = VOCDataModule()
+    _ = VOCDataModule(batch_size=64)
     # _.prepare_data()
     _.setup()
     train_loader = _.train_dataloader()
@@ -128,9 +133,19 @@ if __name__ == "__main__":
     print(len(test_loader))
     # from IPython import embed
     # embed()
-    for x in next(iter(train_loader)):
-        print(x[0].shape)
-        break
+    cnt = 0
+    # for x in next(iter(train_loader)):
+        # print(len(x))
+        # print(x[1].shape)
+        # print(x[1])
+        # cnt = cnt + 1
+        # print(cnt)# break
     # image, label = 
     # print(image.shape)
     # print(label)
+
+    for batch in train_loader:
+        print(len(batch))
+        print(batch[0][0].shape)
+        print(batch[0][1].shape)
+        break

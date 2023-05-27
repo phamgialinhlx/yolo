@@ -128,3 +128,20 @@ class MNISTDataModule(LightningDataModule):
 
 if __name__ == "__main__":
     _ = MNISTDataModule()
+    # _.prepare_data()
+    _.setup()
+    train_loader = _.train_dataloader()
+    val_loader = _.val_dataloader()
+    test_loader = _.test_dataloader()
+    print(len(train_loader))
+    print(len(val_loader))
+    print(len(test_loader))
+    # from IPython import embed
+    # embed()
+    cnt = 0
+    for x in next(iter(train_loader)):
+        print(x.shape)
+        # print(x[1].shape)
+        # print(x[1])
+        cnt = cnt + 1
+        print(cnt)# break

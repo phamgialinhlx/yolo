@@ -252,7 +252,7 @@ def mean_average_precision(
     return sum(average_precisions) / len(average_precisions)
 
 def get_bboxes(
-    loader,
+    batch,
     model,
     iou_threshold,
     threshold,
@@ -265,41 +265,45 @@ def get_bboxes(
 
     # make sure model is in eval before get bboxes
     model.eval()
+    model.to(device)
     train_idx = 0
+    # for batch in loader:
 
-    for batch_idx, (x, labels) in enumerate(loader):
-        x = x.to(device)
-        labels = labels.to(device)
+    x = batch[0].to(device)
+    labels = batch[1].to(device)
 
-        with torch.no_grad():
-            predictions = model(x)
+    # from IPython import embed; embed()
+    # print(torch.unsqueeze(x, 0))
+    # x = torch.unsqueeze(x, 0)
+    with torch.no_grad():
+        predictions = model(x)
 
-        batch_size = x.shape[0]
-        true_bboxes = cellboxes_to_boxes(labels)
-        bboxes = cellboxes_to_boxes(predictions)
+    batch_size = x.shape[0]
+    true_bboxes = cellboxes_to_boxes(labels)
+    bboxes = cellboxes_to_boxes(predictions)
 
-        for idx in range(batch_size):
-            nms_boxes = non_max_suppression(
-                bboxes[idx],
-                iou_threshold=iou_threshold,
-                threshold=threshold,
-                box_format=box_format,
-            )
+    for idx in range(batch_size):
+        nms_boxes = non_max_suppression(
+            bboxes[idx],
+            iou_threshold=iou_threshold,
+            threshold=threshold,
+            box_format=box_format,
+        )
 
 
-            #if batch_idx == 0 and idx == 0:
-            #    plot_image(x[idx].permute(1,2,0).to("cpu"), nms_boxes)
-            #    print(nms_boxes)
+        #if batch_idx == 0 and idx == 0:
+        #    plot_image(x[idx].permute(1,2,0).to("cpu"), nms_boxes)
+        #    print(nms_boxes)
 
-            for nms_box in nms_boxes:
-                all_pred_boxes.append([train_idx] + nms_box)
+        for nms_box in nms_boxes:
+            all_pred_boxes.append([train_idx] + nms_box)
 
-            for box in true_bboxes[idx]:
-                # many will get converted to 0 pred
-                if box[1] > threshold:
-                    all_true_boxes.append([train_idx] + box)
+        for box in true_bboxes[idx]:
+            # many will get converted to 0 pred
+            if box[1] > threshold:
+                all_true_boxes.append([train_idx] + box)
 
-            train_idx += 1
+        train_idx += 1
 
     model.train()
     return all_pred_boxes, all_true_boxes
